@@ -1,4 +1,4 @@
-from database import Database
+from app.database import Database
 
 class BaseDAO:
     def __init__(self, db: Database):
