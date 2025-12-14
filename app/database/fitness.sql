@@ -21,7 +21,8 @@ SET time_zone = "+00:00";
 -- База данных: `fitness`
 --
 
--- --------------------------------------------------------
+CREATE DATABASE fitness;
+use fitness;
 
 --
 -- Структура таблицы `ClassEnrollments`
