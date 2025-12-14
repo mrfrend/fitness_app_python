@@ -44,7 +44,29 @@ class DirectorFinancialWindow(QMainWindow, UiDirectorFinancialWindow):
             return
 
         if self.radioButton_purchases.isChecked():
-            QMessageBox.information(self, "Отчёт", "Отчёт по закупкам оборудования пока не реализован")
+            try:
+                summary = director_dao.get_equipment_inventory_summary()
+                out_of_stock = summary.get("out_of_stock", [])
+                out_of_stock_lines = "\n".join(
+                    f"- {row.get('name_e')} (ID={row.get('equipmentID')})" for row in out_of_stock
+                )
+                if not out_of_stock_lines:
+                    out_of_stock_lines = "Нет"
+
+                QMessageBox.information(
+                    self,
+                    "Отчёт",
+                    "Инвентарь оборудования (текущее состояние):\n"
+                    f"Позиции: {summary.get('total_items', 0)}\n"
+                    f"Всего единиц: {summary.get('total_exist', 0)}\n"
+                    f"Свободно: {summary.get('total_left', 0)}\n"
+                    f"Занято/используется: {summary.get('total_in_use', 0)}\n\n"
+                    "Требуют внимания (quantityLeft = 0):\n"
+                    f"{out_of_stock_lines}",
+                )
+            except Exception as exc:
+                logger.exception("Failed to generate equipment inventory report")
+                QMessageBox.critical(self, "Ошибка", f"Не удалось сформировать отчёт по оборудованию: {exc}")
             return
 
         try:
@@ -77,13 +99,20 @@ class DirectorFinancialWindow(QMainWindow, UiDirectorFinancialWindow):
                 date_to=today,
             )
 
+            equipment = director_dao.get_equipment_inventory_summary()
+
             QMessageBox.information(
                 self,
                 "Стратегический отчёт",
                 "Сводка (всё время):\n"
                 f"Продажи абонементов: {sales.get('sales_count', 0)}\n"
                 f"Выручка: {sales.get('total_revenue', 0)}\n"
-                f"Посещения: {visits.get('visits_count', 0)}",
+                f"Посещения: {visits.get('visits_count', 0)}\n\n"
+                "Оборудование (текущее состояние):\n"
+                f"Позиции: {equipment.get('total_items', 0)}\n"
+                f"Всего единиц: {equipment.get('total_exist', 0)}\n"
+                f"Свободно: {equipment.get('total_left', 0)}\n"
+                f"Занято/используется: {equipment.get('total_in_use', 0)}",
             )
         except Exception as exc:
             logger.exception("Failed to generate strategic financial report")
