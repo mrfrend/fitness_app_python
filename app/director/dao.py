@@ -6,3 +6,5 @@ class DirectorDAO(BaseDAO):
         with self.db.conn.cursor() as cursor:
             cursor.execute("SELECT * FROM director")
             return cursor.fetchall()
+
+director_dao = DirectorDAO(db)
