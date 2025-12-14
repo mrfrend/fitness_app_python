@@ -6,4 +6,4 @@ class Database:
         self.conn = pymysql.connect(host=host, user=user, password=password, database=database, cursorclass=DictCursor)
 
 # Можно менять аргументы, однако изменения в данном файле не коммитить
-db = Database("localhost", "root", "", "fitness_app")
+db = Database("localhost", "root", "", "fitness")
