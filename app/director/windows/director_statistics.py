@@ -26,6 +26,8 @@ class DirectorStatisticsWindow(QMainWindow, UiDirectorStatisticsWindow):
 
         self.pushButton_back.clicked.connect(self._go_back)
         self.pushButton_data.clicked.connect(self._generate_report)
+        self.dateEdit_from.setCalendarPopup(True)
+        self.dateEdit_to.setCalendarPopup(True)
 
         today = date.today()
         self.dateEdit_from.setDate(today)
