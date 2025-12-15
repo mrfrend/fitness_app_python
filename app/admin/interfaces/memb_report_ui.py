@@ -52,7 +52,6 @@ class MembReportUi(QMainWindow):
 
                     QLabel {
                         font-size: 20px;
-                        color: #fff;
                     }
 
                     QComboBox, QLineEdit {

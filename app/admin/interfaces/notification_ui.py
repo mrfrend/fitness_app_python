@@ -80,7 +80,6 @@ class NotificatioUi(QMainWindow):
 
             QLabel {
                 font-size: 18px;
-                color: #fff;
             }
 
             QDateEdit {
