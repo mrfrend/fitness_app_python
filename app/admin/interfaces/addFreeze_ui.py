@@ -1,14 +1,19 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QLineEdit, \
-    QPushButton, QDateEdit, QGridLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                             QLabel, QHBoxLayout, QLineEdit, QPushButton, QDateEdit,
+                             QGridLayout, QMessageBox)
+from PyQt6.QtCore import Qt, QDate, pyqtSignal
 import sys
 
 
 class AddFreeze(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Добавить заморозку")
+    freeze_saved = pyqtSignal(dict)
+    back_requested = pyqtSignal()
 
+    def __init__(self, client_id=None, parent=None, freeze=None):
+        super().__init__(parent)
+        self.client_id = client_id
+        self.freeze = freeze or {}
+        self.setWindowTitle("Добавить заморозку")
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -16,40 +21,41 @@ class AddFreeze(QMainWindow):
         central_widget.setLayout(main_layout)
 
         grid_layout = QGridLayout()
-        grid_layout.setHorizontalSpacing(20)
-        grid_layout.setVerticalSpacing(15)
+        grid_layout.setHorizontalSpacing(16)
+        grid_layout.setVerticalSpacing(12)
         main_layout.addLayout(grid_layout)
 
-        self.client = QLabel("Id клиента")
-        self.f_enter = QLabel("№")
-
-        self.dateOn = QLabel("Дата начала")
-        self.dateOnEnter = QDateEdit()
-
-        self.dateEnd = QLabel("Дата конца")
-        self.dateEndEnter = QDateEdit()
-
-        self.reson = QLabel("Причина")
-        self.resonEnter = QLabel("причина")
-
         labels = [
-            self.client, self.dateOn, self.dateEnd, self.reson
+            QLabel("ID клиента:"),
+            QLabel("Дата начала:"),
+            QLabel("Дата окончания:"),
+            QLabel("Причина:")
         ]
 
-        values = [
-            self.f_enter, self.dateOnEnter, self.dateEndEnter, self.resonEnter
-        ]
+        client_value = self.freeze.get('clientID') if self.freeze else client_id
+        self.client_input = QLineEdit(str(client_value) if client_value else "")
+        self.client_input.setReadOnly(client_id is not None)
+        self.start_input = QDateEdit(calendarPopup=True)
+        self.start_input.setDate(self._get_initial_date('startDate'))
+        self.end_input = QDateEdit(calendarPopup=True)
+        self.end_input.setDate(self._get_initial_date('endDate', default_offset_days=7))
+        self.reason_input = QLineEdit(self.freeze.get('reason', ''))
 
-        for row, (lbl, val) in enumerate(zip(labels, values)):
-            grid_layout.addWidget(lbl, row, 0, alignment=Qt.AlignmentFlag.AlignRight)
-            grid_layout.addWidget(val, row, 1)
+        editors = [self.client_input, self.start_input, self.end_input, self.reason_input]
 
-        btn_layout = QHBoxLayout()
+        for row, (label, editor) in enumerate(zip(labels, editors)):
+            grid_layout.addWidget(label, row, 0, alignment=Qt.AlignmentFlag.AlignRight)
+            grid_layout.addWidget(editor, row, 1)
+
+        buttons = QHBoxLayout()
         self.btnSave = QPushButton("Сохранить")
-        btn_layout.addWidget(self.btnSave)
         self.btnBack = QPushButton("Назад")
-        btn_layout.addWidget(self.btnBack)
-        main_layout.addLayout(btn_layout)
+        buttons.addWidget(self.btnSave)
+        buttons.addWidget(self.btnBack)
+        main_layout.addLayout(buttons)
+
+        self.btnSave.clicked.connect(self._on_save)
+        self.btnBack.clicked.connect(self._on_back)
 
         self.styleApply()
 
@@ -58,11 +64,6 @@ class AddFreeze(QMainWindow):
             QWidget {
                 font-family: Segoe UI;
                 font-size: 14px;
-            }
-
-            QLabel {
-                font-size: 18px;
-                color: #fff;
             }
 
             QDateEdit {
@@ -87,6 +88,55 @@ class AddFreeze(QMainWindow):
                 background-color: #1d4ed8;
             }
         """)
+
+    def _get_initial_date(self, key, default_offset_days=0):
+        if self.freeze.get(key):
+            value = self.freeze[key]
+            if hasattr(value, 'toPyDate'):
+                return value
+            if hasattr(value, 'strftime'):
+                return QDate(value.year, value.month, value.day)
+            if isinstance(value, str):
+                try:
+                    parts = [int(part) for part in value.split('-')]
+                    if len(parts) == 3:
+                        return QDate(parts[0], parts[1], parts[2])
+                except ValueError:
+                    pass
+        return QDate.currentDate().addDays(default_offset_days)
+
+    def _on_save(self):
+        client_text = self.client_input.text().strip()
+        if not client_text.isdigit():
+            QMessageBox.warning(self, 'Ошибка', 'ID клиента должен быть числом')
+            return
+
+        start_date = self.start_input.date()
+        end_date = self.end_input.date()
+
+        if end_date < start_date:
+            QMessageBox.warning(self, 'Ошибка', 'Дата окончания должна быть позже даты начала')
+            return
+
+        data = {
+            'freezeID': self.freeze.get('freezeID'),
+            'membershipID': self.freeze.get('membershipID'),
+            'clientID': int(client_text),
+            'startDate': start_date.toPyDate(),
+            'endDate': end_date.toPyDate(),
+            'reason': self.reason_input.text().strip(),
+        }
+
+        self.freeze_saved.emit(data)
+        self._on_back()
+
+    def _on_back(self):
+        self.back_requested.emit()
+        self.close()
+
+    def closeEvent(self, event):
+        self.back_requested.emit()
+        event.accept()
 
 
 if __name__ == "__main__":

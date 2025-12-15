@@ -1,13 +1,16 @@
-from PyQt6.QtWidgets import QWidget, QPushButton, QVBoxLayout, QApplication, QMainWindow, QLabel, QHBoxLayout, \
-    QComboBox, QLineEdit, QDateEdit
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                             QLabel, QHBoxLayout, QLineEdit, QDateEdit, QPushButton)
+from PyQt6.QtCore import pyqtSignal, QDate
 import sys
-
-from ui_admin.add_client_ui import AddClientWindow
 
 
 class MembEdit(QMainWindow):
-    def __init__(self):
-        super().__init__()
+    membership_updated = pyqtSignal()
+    back_requested = pyqtSignal()
+
+    def __init__(self, client_id=None, parent=None):
+        super().__init__(parent)
+        self.client_id = client_id
         self.setWindowTitle("Изменение абонемента")
 
         central_widget = QWidget()
@@ -15,37 +18,38 @@ class MembEdit(QMainWindow):
         main_layout = QVBoxLayout()
         central_widget.setLayout(main_layout)
 
-        self.label = QLabel("Изменение абонемента")
-        main_layout.addWidget(self.label)
+        title = QLabel("Изменение абонемента")
+        main_layout.addWidget(title)
 
-        new_type_layout = QHBoxLayout()
-        self.labelNew = QLabel("Новый тип: ")
-        new_type_layout.addWidget(self.labelNew)
-        self.comboBox = QLineEdit()
-        new_type_layout.addWidget(self.comboBox)
-        main_layout.addLayout(new_type_layout)
+        type_layout = QHBoxLayout()
+        type_layout.addWidget(QLabel("Новый тип:"))
+        self.type_input = QLineEdit()
+        type_layout.addWidget(self.type_input)
+        main_layout.addLayout(type_layout)
 
         start_layout = QHBoxLayout()
-        self.labelStart = QLabel("Начало: ")
-        start_layout.addWidget(self.labelStart)
-        self.startDate = QDateEdit()
-        start_layout.addWidget(self.startDate)
+        start_layout.addWidget(QLabel("Начало:"))
+        self.start_date = QDateEdit(calendarPopup=True)
+        self.start_date.setDate(QDate.currentDate())
+        start_layout.addWidget(self.start_date)
         main_layout.addLayout(start_layout)
 
         end_layout = QHBoxLayout()
-        self.labelEnd = QLabel("Конец: ")
-        end_layout.addWidget(self.labelEnd)
-        self.endDate = QDateEdit()
-        end_layout.addWidget(self.endDate)
+        end_layout.addWidget(QLabel("Конец:"))
+        self.end_date = QDateEdit(calendarPopup=True)
+        self.end_date.setDate(QDate.currentDate().addMonths(1))
+        end_layout.addWidget(self.end_date)
         main_layout.addLayout(end_layout)
 
         btn_layout = QHBoxLayout()
         self.btnSave = QPushButton("Сохранить")
-        btn_layout.addWidget(self.btnSave)
         self.btnBack = QPushButton("Назад")
+        btn_layout.addWidget(self.btnSave)
         btn_layout.addWidget(self.btnBack)
         main_layout.addLayout(btn_layout)
 
+        self.btnSave.clicked.connect(self._on_save)
+        self.btnBack.clicked.connect(self._on_back)
 
         self.styleApply()
 
@@ -54,11 +58,6 @@ class MembEdit(QMainWindow):
             QWidget {
                 font-family: Segoe UI;
                 font-size: 14px;
-            }
-
-            QLabel {
-                font-size: 18px;
-                color: #fff;
             }
 
             QDateEdit {
@@ -83,6 +82,19 @@ class MembEdit(QMainWindow):
                 background-color: #1d4ed8;
             }
         """)
+
+    def _on_save(self):
+        # Логика обновления абонемента может быть добавлена здесь.
+        self.membership_updated.emit()
+        self._on_back()
+
+    def _on_back(self):
+        self.back_requested.emit()
+        self.close()
+
+    def closeEvent(self, event):
+        self.back_requested.emit()
+        event.accept()
 
 
 if __name__ == "__main__":
