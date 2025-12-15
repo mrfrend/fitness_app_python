@@ -18,12 +18,13 @@ class ManageClient(QMainWindow):
 
         buttons_layout = QHBoxLayout()
         self.btnAdd = QPushButton("Добавить клиента")
+        self.btnInfo = QPushButton("Данные клиента")
         self.btnEdit = QPushButton("Изменить абонемент")
         self.btnCard = QPushButton("Распечатать клубную карту")
         self.btnFreeze = QPushButton("Заморозить абонемент")
         self.btnBack = QPushButton("Назад")
 
-        for button in (self.btnAdd, self.btnEdit, self.btnCard, self.btnFreeze, self.btnBack):
+        for button in (self.btnAdd, self.btnInfo, self.btnEdit, self.btnCard, self.btnFreeze, self.btnBack):
             button.setMinimumWidth(170)
             buttons_layout.addWidget(button)
 

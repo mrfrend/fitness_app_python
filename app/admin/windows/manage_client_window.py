@@ -1,6 +1,7 @@
 import os
-from PyQt6.QtWidgets import (QApplication, QMessageBox, QFileDialog,
-                            QTableWidgetItem)
+from typing import Any, Dict, Optional
+
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox, QTableWidgetItem
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 from openpyxl.drawing.image import Image as XLImage
@@ -9,22 +10,26 @@ from app.admin.interfaces.manage_client_ui import ManageClient
 from app.admin.interfaces.add_client_ui import AddClientWindow
 from app.admin.interfaces.memb_edit_ui import MembEdit
 from app.admin.interfaces.addFreeze_ui import AddFreeze
-from app.admin.db_objects.database_for_me import Database
-
-db = Database("localhost", "root", "", "fitness")
+from app.admin.windows.client_info_window import ClientInfoWindow
+from app.admin.db_objects.database_for_me import db
+from app.admin.services.membership_freeze_service import MembershipFreezeService
 
 
 class ManageClientWindow(ManageClient):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent_window = parent
-        self.current_client_id = None
+        self.current_client_id: Optional[int] = None
+        self._client_info_window: Optional[ClientInfoWindow] = None
+        self._freeze_window: Optional[AddFreeze] = None
+        self._freeze_service = MembershipFreezeService()
 
         self._setup_connections()
         self.load_clients()
 
     def _setup_connections(self):
         self.btnAdd.clicked.connect(self.add_client)
+        self.btnInfo.clicked.connect(self.open_client_info)
         self.btnEdit.clicked.connect(self.edit_membership)
         self.btnCard.clicked.connect(self.print_club_card)
         self.btnFreeze.clicked.connect(self.freeze_membership)
@@ -32,6 +37,7 @@ class ManageClientWindow(ManageClient):
         
         self.tableWidget.itemSelectionChanged.connect(self.on_client_selected)
         
+        self.btnInfo.setEnabled(False)
         self.btnEdit.setEnabled(False)
         self.btnCard.setEnabled(False)
         self.btnFreeze.setEnabled(False)
@@ -87,11 +93,13 @@ class ManageClientWindow(ManageClient):
         if selected_items and selected_items[0]:
             row = selected_items[0].row()
             self.current_client_id = int(self.tableWidget.item(row, 0).text())
+            self.btnInfo.setEnabled(True)
             self.btnEdit.setEnabled(True)
             self.btnCard.setEnabled(True)
             self.btnFreeze.setEnabled(True)
         else:
             self.current_client_id = None
+            self.btnInfo.setEnabled(False)
             self.btnEdit.setEnabled(False)
             self.btnCard.setEnabled(False)
             self.btnFreeze.setEnabled(False)
@@ -104,7 +112,7 @@ class ManageClientWindow(ManageClient):
         self.hide()
         self.add_client_window.show()
 
-    def _create_client(self, data):
+    def _create_client(self, data: Dict[str, Any]) -> None:
         try:
             with db.conn.cursor() as cursor:
                 first_name = data.get('first_name', '')
@@ -137,6 +145,17 @@ class ManageClientWindow(ManageClient):
         except Exception as e:
             db.conn.rollback()
             QMessageBox.critical(self, 'Ошибка', f'Не удалось добавить клиента: {str(e)}')
+
+    def open_client_info(self) -> None:
+        if not self.current_client_id:
+            QMessageBox.warning(self, 'Ошибка', 'Пожалуйста, выберите клиента')
+            return
+
+        self._client_info_window = ClientInfoWindow(self.current_client_id, self)
+        self._client_info_window.client_updated.connect(self.load_clients)
+        self._client_info_window.back_requested.connect(self._return_from_child)
+        self.hide()
+        self._client_info_window.show()
 
     def edit_membership(self):
         """Open the membership edit dialog for the selected client"""
@@ -277,12 +296,21 @@ class ManageClientWindow(ManageClient):
         if not self.current_client_id:
             QMessageBox.warning(self, 'Ошибка', 'Пожалуйста, выберите клиента')
             return
-                
-        self.freeze_window = AddFreeze(self.current_client_id, self)
-        self.freeze_window.freeze_added.connect(self.load_clients)
-        self.freeze_window.back_requested.connect(self._return_from_child)
+
+        self._freeze_window = AddFreeze(self.current_client_id, self)
+        self._freeze_window.freeze_saved.connect(self._save_freeze)
+        self._freeze_window.back_requested.connect(self._return_from_child)
         self.hide()
-        self.freeze_window.show()
+        self._freeze_window.show()
+
+    def _save_freeze(self, data: Dict[str, Any]) -> None:
+        try:
+            self._freeze_service.save_freeze(data)
+            QMessageBox.information(self, 'Успех', 'Заморозка успешно сохранена')
+            self.load_clients()
+        except Exception as exc:
+            db.conn.rollback()
+            QMessageBox.critical(self, 'Ошибка', f'Не удалось сохранить заморозку: {exc}')
 
     def go_back(self):
         if self.parent_window:

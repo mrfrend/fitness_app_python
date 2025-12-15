@@ -1,6 +1,17 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QLineEdit, \
-    QPushButton, QDateEdit, QGridLayout, QTextEdit
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QDate, Qt
+from PyQt6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QDateEdit,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 import sys
 
 
@@ -22,10 +33,13 @@ class NotificatioUi(QMainWindow):
         main_layout.addLayout(grid_layout)
 
         self.send_to_text = QLabel("Кому")
-        self.send_to_enter = QLineEdit()
+        self.send_to_combo = QComboBox()
 
         self.date_text = QLabel("Дата")
-        self.date_enter = QDateEdit()
+        self.date_enter = QDateEdit(calendarPopup=True)
+        self.date_enter.setDisplayFormat("dd.MM.yyyy")
+        self.date_enter.setDate(QDate.currentDate())
+
 
         self.text_text = QLabel("Текст")
         self.text_enter = QTextEdit("Современные технологии достигли такого уровня, что курс на социально-ориентированный национальный проект требует анализа поставленных обществом задач. Не следует, однако, забывать, что перспективное планирование требует от нас анализа поэтапного и последовательного развития общества.")
@@ -36,11 +50,8 @@ class NotificatioUi(QMainWindow):
             self.text_text
         ]
 
-        values = [
-            self.send_to_enter,
-            self.date_enter,
-            self.text_enter
-        ]
+        values = [self.send_to_combo, self.date_enter, self.text_enter]
+
 
         for row, (lbl, val) in enumerate(zip(labels, values)):
             grid_layout.addWidget(lbl, row, 0, alignment=Qt.AlignmentFlag.AlignRight)

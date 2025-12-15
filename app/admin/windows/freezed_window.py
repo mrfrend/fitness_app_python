@@ -1,11 +1,10 @@
-from datetime import date
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QTableWidgetItem, QMessageBox
 
 from app.admin.interfaces.freezed_ui import FreezedUi
 from app.admin.interfaces.addFreeze_ui import AddFreeze
 from app.admin.db_objects.database_for_me import db
+from app.admin.services.membership_freeze_service import MembershipFreezeService
 
 
 class FreezedWindow(FreezedUi):
@@ -14,6 +13,7 @@ class FreezedWindow(FreezedUi):
         self.parent_window = parent
         self._selected_freeze = None
         self._freeze_editor = None
+        self._freeze_service = MembershipFreezeService()
 
         self._setup_table()
         self._setup_connections()
@@ -34,20 +34,7 @@ class FreezedWindow(FreezedUi):
 
     def load_freezes(self):
         try:
-            with db.conn.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT mf.freezeID,
-                           mf.mf_membershipID AS membershipID,
-                           m.clientID,
-                           mf.startDate,
-                           mf.endDate
-                    FROM MembershipFreezes mf
-                    JOIN Memberships m ON mf.mf_membershipID = m.membID
-                    ORDER BY mf.startDate DESC
-                    """
-                )
-                freezes = cursor.fetchall()
+            freezes = self._freeze_service.list_freezes()
 
             self.table.setRowCount(len(freezes))
             for row, freeze in enumerate(freezes):
@@ -100,33 +87,7 @@ class FreezedWindow(FreezedUi):
 
     def _save_freeze(self, data):
         try:
-            with db.conn.cursor() as cursor:
-                membership_id = data.get('membershipID')
-                if not membership_id:
-                    membership_id = self._find_membership_for_client(cursor, data['clientID'])
-                    if not membership_id:
-                        raise ValueError('Активный абонемент не найден для клиента')
-
-                if data.get('freezeID'):
-                    cursor.execute(
-                        "UPDATE MembershipFreezes SET startDate = %s, endDate = %s WHERE freezeID = %s",
-                        (data['startDate'], data['endDate'], data['freezeID'])
-                    )
-                    cursor.execute(
-                        "UPDATE Memberships SET membStatus = %s WHERE membID = %s",
-                        (self._status_for_dates(data['startDate'], data['endDate']), membership_id)
-                    )
-                else:
-                    cursor.execute(
-                        "INSERT INTO MembershipFreezes (mf_membershipID, startDate, endDate) VALUES (%s, %s, %s)",
-                        (membership_id, data['startDate'], data['endDate'])
-                    )
-                    cursor.execute(
-                        "UPDATE Memberships SET membStatus = %s WHERE membID = %s",
-                        (self._status_for_dates(data['startDate'], data['endDate']), membership_id)
-                    )
-
-            db.conn.commit()
+            self._freeze_service.save_freeze(data)
             QMessageBox.information(self, 'Успех', 'Заморозка успешно сохранена')
             self.load_freezes()
         except Exception as exc:
@@ -151,17 +112,10 @@ class FreezedWindow(FreezedUi):
             return
 
         try:
-            with db.conn.cursor() as cursor:
-                cursor.execute(
-                    "DELETE FROM MembershipFreezes WHERE freezeID = %s",
-                    (freeze_id,)
-                )
-                cursor.execute(
-                    "UPDATE Memberships SET membStatus = 'Active' WHERE membID = %s",
-                    (self._selected_freeze.get('membershipID'),)
-                )
-
-            db.conn.commit()
+            self._freeze_service.delete_freeze(
+                int(freeze_id),
+                int(self._selected_freeze.get('membershipID')) if self._selected_freeze.get('membershipID') else None,
+            )
             QMessageBox.information(self, 'Успех', 'Заморозка удалена, абонемент восстановлен')
             self.load_freezes()
         except Exception as exc:
@@ -180,37 +134,3 @@ class FreezedWindow(FreezedUi):
         if self.parent_window:
             self.parent_window.show()
         event.accept()
-
-    def _find_membership_for_client(self, cursor, client_id):
-        cursor.execute(
-            """
-            SELECT membID
-            FROM Memberships
-            WHERE clientID = %s AND membStatus IN ('Active', 'Frozen')
-            ORDER BY endDate DESC
-            LIMIT 1
-            """,
-            (client_id,)
-        )
-        membership = cursor.fetchone()
-        if membership:
-            return membership.get('membID')
-
-        cursor.execute(
-            """
-            SELECT membID
-            FROM Memberships
-            WHERE clientID = %s
-            ORDER BY endDate DESC
-            LIMIT 1
-            """,
-            (client_id,)
-        )
-        membership = cursor.fetchone()
-        return membership.get('membID') if membership else None
-
-    def _status_for_dates(self, start, end):
-        today = date.today()
-        if start <= today <= end:
-            return 'Frozen'
-        return 'Active'
