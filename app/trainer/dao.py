@@ -7,12 +7,89 @@ class TrainerDAO(BaseDAO):
     def __init__(self, db: Database):
         super().__init__(db)
 
+    def _ensure_trainer_busy_table(self) -> None:
+        self.execute(
+            """
+            CREATE TABLE IF NOT EXISTS TrainerBusy (
+                busyID INT NOT NULL AUTO_INCREMENT,
+                trainerID INT NOT NULL,
+                dateFrom DATE NOT NULL,
+                dateTo DATE NOT NULL,
+                note VARCHAR(250) DEFAULT NULL,
+                PRIMARY KEY (busyID),
+                KEY trainerID (trainerID),
+                CONSTRAINT trainerbusy_ibfk_1 FOREIGN KEY (trainerID) REFERENCES Users (userID)
+            )
+            """
+        )
+        self.commit()
+
     def get_trainer(self, trainer_id: int):
         return self.fetch_one(
             """
             SELECT userID, first_name, last_name, middle_name, phone, email, health_limits, userType, birthDate
             FROM Users
             WHERE userID = %s AND userType = 'Trainer'
+            """,
+            (trainer_id,),
+        )
+
+    def trainer_exists(self, trainer_id: int) -> bool:
+        val = self.fetch_scalar(
+            """
+            SELECT 1
+            FROM Users
+            WHERE userID = %s AND userType = 'Trainer'
+            """,
+            (trainer_id,),
+        )
+        return val is not None
+
+    def swap_group_class_trainer(self, class_id: int, from_trainer_id: int, to_trainer_id: int) -> int:
+        rowcount = self.execute(
+            """
+            UPDATE GroupClasses
+            SET trainerID = %s
+            WHERE classID = %s AND trainerID = %s
+            """,
+            (to_trainer_id, class_id, from_trainer_id),
+        )
+        self.commit()
+        return rowcount
+
+    def swap_personal_training_trainer(self, training_id: int, from_trainer_id: int, to_trainer_id: int) -> int:
+        rowcount = self.execute(
+            """
+            UPDATE PersonalTraining
+            SET trainerID = %s
+            WHERE trainingID = %s AND trainerID = %s
+            """,
+            (to_trainer_id, training_id, from_trainer_id),
+        )
+        self.commit()
+        return rowcount
+
+    def add_trainer_busy(self, trainer_id: int, date_from: str, date_to: str, note: str | None = None) -> int:
+        self._ensure_trainer_busy_table()
+        self.execute(
+            """
+            INSERT INTO TrainerBusy (trainerID, dateFrom, dateTo, note)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (trainer_id, date_from, date_to, note),
+        )
+        new_id = self.fetch_scalar("SELECT LAST_INSERT_ID()")
+        self.commit()
+        return int(new_id) if new_id is not None else 0
+
+    def list_trainer_busy(self, trainer_id: int):
+        self._ensure_trainer_busy_table()
+        return self.fetch_all(
+            """
+            SELECT busyID, trainerID, dateFrom, dateTo, note
+            FROM TrainerBusy
+            WHERE trainerID = %s
+            ORDER BY dateFrom DESC, busyID DESC
             """,
             (trainer_id,),
         )
