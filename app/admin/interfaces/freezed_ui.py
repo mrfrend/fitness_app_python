@@ -51,7 +51,6 @@ class FreezedUi(QMainWindow):
 
                     QLabel {
                         font-size: 20px;
-                        color: #fff;
                     }
 
                     QComboBox, QLineEdit {

@@ -1,77 +1,58 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QLineEdit, \
-    QPushButton, QDateEdit, QGridLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                             QLabel, QLineEdit, QPushButton, QDateEdit, QGridLayout,
+                             QMessageBox)
+from PyQt6.QtCore import Qt, QDate, pyqtSignal
 import sys
 
 
 class AddClientWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Добавить клиента")
+    client_added = pyqtSignal(dict)
+    back_requested = pyqtSignal()
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Добавить клиента")
+        self.setMinimumSize(420, 520)
+        self.save_succeeded = False
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout()
         central_widget.setLayout(main_layout)
 
-
         grid_layout = QGridLayout()
-        grid_layout.setHorizontalSpacing(20)
-        grid_layout.setVerticalSpacing(15)
+        grid_layout.setHorizontalSpacing(16)
+        grid_layout.setVerticalSpacing(12)
         main_layout.addLayout(grid_layout)
 
-        self.f_text = QLabel("Фaмилия")
-        self.f_enter = QLabel("Иванов")
+        self.inputs = {
+            "last_name": (QLabel("Фамилия"), QLineEdit()),
+            "first_name": (QLabel("Имя"), QLineEdit()),
+            "middle_name": (QLabel("Отчество"), QLineEdit()),
+            "birth": (QLabel("Дата рождения"), QDateEdit(calendarPopup=True)),
+            "phone": (QLabel("Телефон"), QLineEdit()),
+            "email": (QLabel("Email"), QLineEdit()),
+            "goal": (QLabel("Цель занятий"), QLineEdit()),
+            "limits": (QLabel("Мед. ограничения"), QLineEdit())
+        }
 
-        self.i_text = QLabel("Имя")
-        self.i_enter = QLabel("Сергей")
+        self.inputs["birth"][1].setDisplayFormat("dd.MM.yyyy")
+        self.inputs["birth"][1].setDate(QDate.currentDate().addYears(-18))
 
-        self.o_text = QLabel("Отчество")
-        self.o_enter = QLabel("Петрович")
+        for row, (label, editor) in enumerate(self.inputs.values()):
+            grid_layout.addWidget(label, row, 0, alignment=Qt.AlignmentFlag.AlignRight)
+            grid_layout.addWidget(editor, row, 1)
 
-        self.birth_text = QLabel("Дата рождения:")
-        self.birth_enter = QDateEdit()
-
-        self.goal_text = QLabel("Цель занятий:")
-        self.goal_enter = QLabel("Мышцы хочу")
-
-        self.rost_text = QLabel("Рост:")
-        self.rost_enter = QLabel("190")
-
-        self.email_text = QLabel("Email:")
-        self.email_enter = QLabel("ivanovsergay190@mail.ru")
-
-        self.phone_text = QLabel("Телефон:")
-        self.phone_enter = QLabel("89261726312")
-
-        self.med_text = QLabel("Мед. ограничения:")
-        self.med_enter = QLabel("Нет")
-
-        labels = [
-            self.f_text, self.i_text, self.o_text, self.rost_text, self.birth_text,
-            self.goal_text, self.email_text, self.phone_text, self.med_text
-        ]
-
-        values = [
-            self.f_enter, self.i_enter, self.o_enter, self.rost_enter, self.birth_enter,
-            self.goal_enter, self.email_enter, self.phone_enter, self.med_enter
-        ]
-
-        for row, (lbl, val) in enumerate(zip(labels, values)):
-            grid_layout.addWidget(lbl, row, 0, alignment=Qt.AlignmentFlag.AlignRight)
-            grid_layout.addWidget(val, row, 1)
-
-
+        button_layout = QGridLayout()
         self.btnCreate = QPushButton("Создать")
         self.btnBack = QPushButton("Назад")
-
-        main_layout.addWidget(self.btnCreate)
-        main_layout.addWidget(self.btnBack)
-
+        button_layout.addWidget(self.btnCreate, 0, 0)
+        button_layout.addWidget(self.btnBack, 0, 1)
+        main_layout.addLayout(button_layout)
         main_layout.addStretch(1)
 
-
+        self.btnCreate.clicked.connect(self._on_create)
+        self.btnBack.clicked.connect(self.close)
 
         self.styleApply()
 
@@ -80,17 +61,6 @@ class AddClientWindow(QMainWindow):
             QWidget {
                 font-family: Segoe UI;
                 font-size: 14px;
-            }
-
-            QLabel {
-                font-size: 18px;
-                color: #fff;
-            }
-
-            QDateEdit {
-                padding: 6px;
-                border: 1px solid #aaa;
-                border-radius: 6px;
             }
 
             QPushButton {
@@ -109,6 +79,32 @@ class AddClientWindow(QMainWindow):
                 background-color: #1d4ed8;
             }
         """)
+
+    def _on_create(self):
+        required = [self.inputs["last_name"][1], self.inputs["first_name"][1], self.inputs["phone"][1]]
+        if any(not field.text().strip() for field in required):
+            QMessageBox.warning(self, "Ошибка", "Заполните фамилию, имя и телефон")
+            return
+
+        self.save_succeeded = False
+        data = {
+            "last_name": self.inputs["last_name"][1].text().strip(),
+            "first_name": self.inputs["first_name"][1].text().strip(),
+            "middle_name": self.inputs["middle_name"][1].text().strip(),
+            "birth_date": self.inputs["birth"][1].date().toPyDate(),
+            "phone": self.inputs["phone"][1].text().strip(),
+            "email": self.inputs["email"][1].text().strip(),
+            "goal": self.inputs["goal"][1].text().strip(),
+            "health_limits": self.inputs["limits"][1].text().strip()
+        }
+
+        self.client_added.emit(data)
+        if self.save_succeeded:
+            self.close()
+
+    def closeEvent(self, event):
+        self.back_requested.emit()
+        event.accept()
 
 
 if __name__ == "__main__":

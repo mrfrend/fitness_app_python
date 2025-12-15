@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QLineEdit, \
-    QPushButton, QDateEdit, QGridLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout,
+                             QLineEdit, QPushButton, QDateEdit, QGridLayout, QTableWidget, QTableWidgetItem, QTextEdit)
+from PyQt6.QtCore import Qt, QDate
 import sys
 
 
@@ -17,52 +17,59 @@ class WorkloadUi(QMainWindow):
         self.main_label = QLabel("Загруженность залов")
         main_layout.addWidget(self.main_label)
 
-        grid_layout1 = QGridLayout()
-        grid_layout1.setHorizontalSpacing(20)
-        grid_layout1.setVerticalSpacing(15)
-        main_layout.addLayout(grid_layout1)
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels([
+            'ID', 'Зона', 'Дата начала', 'Дата окончания', 'Описание'
+        ])
+        main_layout.addWidget(self.table)
 
-        self.date_text = QLabel("Дата")
-        self.date_enter = QDateEdit()
+        form_layout = QGridLayout()
+        form_layout.setHorizontalSpacing(16)
+        form_layout.setVerticalSpacing(12)
+        main_layout.addLayout(form_layout)
 
-        self.information_text = QLabel("Инфо занятий")
-        self.information_enter = QLabel("фо вата фо шнеле")
+        self.zone_label = QLabel("Зона")
+        self.zone_select = QComboBox()
+        form_layout.addWidget(self.zone_label, 0, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        form_layout.addWidget(self.zone_select, 0, 1)
 
-        grid_layout1.addWidget(self.date_text, 0, 0, alignment=Qt.AlignmentFlag.AlignRight)
-        grid_layout1.addWidget(self.date_enter, 0, 1)
-        grid_layout1.addWidget(self.information_text, 1, 0, alignment=Qt.AlignmentFlag.AlignRight)
-        grid_layout1.addWidget(self.information_enter, 1, 1)
+        self.start_label = QLabel("Дата начала")
+        self.start_date = QDateEdit(calendarPopup=True)
+        self.start_date.setDate(QDate.currentDate())
+        form_layout.addWidget(self.start_label, 1, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        form_layout.addWidget(self.start_date, 1, 1)
 
-        self.middle_label = QLabel("Отчет посещаемости:")
-        main_layout.addWidget(self.middle_label)
+        self.end_label = QLabel("Дата окончания")
+        self.end_date = QDateEdit(calendarPopup=True)
+        self.end_date.setDate(QDate.currentDate())
+        form_layout.addWidget(self.end_label, 2, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        form_layout.addWidget(self.end_date, 2, 1)
 
-        grid_layout2 = QGridLayout()
-        grid_layout2.setHorizontalSpacing(20)
-        grid_layout2.setVerticalSpacing(15)
-        main_layout.addLayout(grid_layout2)
-
-        self.start_text = QLabel("Начало")
-        self.start_enter = QLineEdit()
-
-        self.end_text = QLabel("Конец")
-        self.end_enter = QLineEdit()
-
-
-        grid_layout2.addWidget(self.start_text, 0, 0, alignment=Qt.AlignmentFlag.AlignRight)
-        grid_layout2.addWidget(self.start_enter, 0, 1)
-        grid_layout2.addWidget(self.end_text, 1, 0, alignment=Qt.AlignmentFlag.AlignRight)
-        grid_layout2.addWidget(self.end_enter, 1, 1)
+        self.info_label = QLabel("Описание")
+        self.info_input = QTextEdit()
+        form_layout.addWidget(self.info_label, 3, 0, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        form_layout.addWidget(self.info_input, 3, 1)
 
         btn_layout = QHBoxLayout()
-        self.btnCreate = QPushButton("Сформировать отчет")
-        self.btnBack = QPushButton("Назад")
+        self.btnAdd = QPushButton("Добавить запись")
+        self.btnAdd.setObjectName('btnAdd')
+        btn_layout.addWidget(self.btnAdd)
 
+        self.btnUpdate = QPushButton("Обновить запись")
+        btn_layout.addWidget(self.btnUpdate)
 
-        btn_layout.addWidget(self.btnCreate)
-        btn_layout.addWidget(self.btnBack)
+        self.btnDelete = QPushButton("Удалить запись")
+        btn_layout.addWidget(self.btnDelete)
 
-
+        btn_layout.addStretch(1)
         main_layout.addLayout(btn_layout)
+
+        back_layout = QHBoxLayout()
+        self.btnBack = QPushButton("Назад")
+        back_layout.addStretch(1)
+        back_layout.addWidget(self.btnBack)
+        main_layout.addLayout(back_layout)
 
         self.styleApply()
 
@@ -75,7 +82,6 @@ class WorkloadUi(QMainWindow):
 
             QLabel {
                 font-size: 18px;
-                color: #fff;
             }
 
             QDateEdit {
