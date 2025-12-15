@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from app.core.ui_styles import DIRECTOR_UI_STYLESHEET
 from app.director.dao import director_dao
 from app.director.interfaces.director_equipment import Ui_MainWindow as UiDirectorEquipmentWindow
 
@@ -63,6 +64,7 @@ class DirectorEquipmentWindow(QMainWindow, UiDirectorEquipmentWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._equipment_table = QTableWidget(parent=self.centralwidget)
         self._equipment_table.setColumnCount(len(_EQUIPMENT_TABLE_COLUMNS))
@@ -71,7 +73,6 @@ class DirectorEquipmentWindow(QMainWindow, UiDirectorEquipmentWindow):
         self._equipment_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._equipment_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._equipment_table.setAlternatingRowColors(True)
-        self._equipment_table.setStyleSheet(_TABLE_WIDGET_STYLE)
 
         self._button_add = QPushButton("Добавить", parent=self.centralwidget)
         self._button_edit = QPushButton("Редактировать", parent=self.centralwidget)

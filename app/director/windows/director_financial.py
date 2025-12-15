@@ -6,6 +6,7 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QWidget
 
+from app.core.ui_styles import DIRECTOR_UI_STYLESHEET
 from app.director.interfaces.director_financial import Ui_MainWindow as UiDirectorFinancialWindow
 from app.director.dao import director_dao
 
@@ -25,6 +26,7 @@ class DirectorFinancialWindow(QMainWindow, UiDirectorFinancialWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self.pushButton_back.clicked.connect(self._go_back)
         self.pushButton_data.clicked.connect(self._generate_report)

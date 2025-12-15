@@ -6,6 +6,7 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QMainWindow, QMessageBox, QTableWidget, QTableWidgetItem, QWidget
 
+from app.core.ui_styles import DIRECTOR_UI_STYLESHEET
 from app.director.interfaces.director_price_policy import Ui_MainWindow as UiDirectorPricePolicyWindow
 from app.director.dao import director_dao
 
@@ -54,13 +55,15 @@ class DirectorPricePolicyWindow(QMainWindow, UiDirectorPricePolicyWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._memberships_table = QTableWidget(parent=self.centralwidget)
         self._memberships_table.setColumnCount(len(_MEMBERSHIP_TABLE_COLUMNS))
         self._memberships_table.setHorizontalHeaderLabels(list(_MEMBERSHIP_TABLE_COLUMNS))
         self._memberships_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._memberships_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._memberships_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._memberships_table.setAlternatingRowColors(True)
-        self._memberships_table.setStyleSheet(_TABLE_WIDGET_STYLE)
         self.verticalLayout.insertWidget(0, self._memberships_table)
         self.verticalScrollBar.hide()
 

@@ -5,7 +5,7 @@ from typing import Optional
 
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 
-from app.core.ui_styles import DARK_UI_STYLESHEET
+from app.core.ui_styles import DARK_UI_STYLESHEET, DIRECTOR_UI_STYLESHEET
 from app.director.interfaces.director_main import Ui_MainWindow as UiDirectorMainWindow
 from app.director.windows.director_equipment import DirectorEquipmentWindow
 from app.director.windows.director_financial import DirectorFinancialWindow
@@ -31,6 +31,7 @@ class DirectorMainWindow(QMainWindow, UiDirectorMainWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._statistics_window: Optional[DirectorStatisticsWindow] = None
         self._financial_window: Optional[DirectorFinancialWindow] = None

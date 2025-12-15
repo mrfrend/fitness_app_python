@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from app.core.ui_styles import DIRECTOR_UI_STYLESHEET
 from app.director.dao import director_dao
 from app.director.interfaces.director_hiring import Ui_MainWindow as UiDirectorHiringWindow
 
@@ -73,6 +74,7 @@ class DirectorHiringWindow(QMainWindow, UiDirectorHiringWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._employees_table = QTableWidget(parent=self.centralwidget)
         self._employees_table.setColumnCount(len(_EMPLOYEE_TABLE_COLUMNS))
@@ -81,7 +83,6 @@ class DirectorHiringWindow(QMainWindow, UiDirectorHiringWindow):
         self._employees_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._employees_table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._employees_table.setAlternatingRowColors(True)
-        self._employees_table.setStyleSheet(_TABLE_WIDGET_STYLE)
         self.verticalLayout.insertWidget(1, self._employees_table)
         self.verticalScrollBar.hide()
 
