@@ -3,12 +3,14 @@ from PyQt6.QtWidgets import QMessageBox
 from app.client.interfaces.auth_ui import AuthUi
 from app.client.dao.client_dao import ClientDAO
 from app.client.windows.client_window import ClientWindow
-
+from app.director.windows.director_main import DirectorMainWindow
+from app.admin.windows.admin_main_window import AdminPanelWindow
 
 class AuthWindow(AuthUi):
     def __init__(self):
         super().__init__()
         self.dao = ClientDAO()
+        self.setMinimumHeight(250)
 
         # Подключаем обработчики событий
         self.loginBtn.clicked.connect(self.handle_login)
@@ -38,6 +40,11 @@ class AuthWindow(AuthUi):
                 border: 1px solid #555555;
                 border-radius: 6px;
                 padding: 8px;
+            }
+
+            QComboBox QAbstractItemView {
+                color: #ffffff;
+                background-color: #1e1e1e;
             }
 
             QLineEdit {
@@ -96,15 +103,23 @@ class AuthWindow(AuthUi):
 
         if user:
             # Пока только для клиентов
-            if db_user_type == 'Client':
-                # Открываем главное окно клиента
-                self.client_window = ClientWindow(user['userID'])
-                self.client_window.show()
-                self.hide()
-            else:
-                QMessageBox.information(self, "Информация",
+            match db_user_type:
+                case "Client":
+                    # Открываем главное окно клиента
+                    self.client_window = ClientWindow(user['userID'])
+                    self.client_window.show()
+                    self.hide()
+                case "Director":
+                    self.director_window = DirectorMainWindow()
+                    self.director_window.show()
+                    self.hide()
+                case 'Administrator':
+                    self.admin_window = AdminPanelWindow()
+                    self.admin_window.show()
+                    self.hide()
+            QMessageBox.information(self, "Информация",
                                         f"Добро пожаловать, {user['first_name']}!\n"
-                                        f"Интерфейс для {user_type.lower()} в разработке.")
+                                        f"Вы в главном окне для {user_type}")        
         else:
             QMessageBox.warning(self, "Ошибка",
                                 "Неверный логин, пароль или тип пользователя")
