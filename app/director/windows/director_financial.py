@@ -26,6 +26,7 @@ class DirectorFinancialWindow(QMainWindow, UiDirectorFinancialWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Финансовые показатели")
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self.pushButton_back.clicked.connect(self._go_back)

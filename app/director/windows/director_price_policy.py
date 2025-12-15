@@ -55,6 +55,7 @@ class DirectorPricePolicyWindow(QMainWindow, UiDirectorPricePolicyWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Ценовая политика")
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._memberships_table = QTableWidget(parent=self.centralwidget)

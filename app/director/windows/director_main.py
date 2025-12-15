@@ -31,6 +31,8 @@ class DirectorMainWindow(QMainWindow, UiDirectorMainWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Главное окно директора")
+        self.setMinimumHeight(400)
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._statistics_window: Optional[DirectorStatisticsWindow] = None

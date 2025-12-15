@@ -73,6 +73,7 @@ class DirectorHiringWindow(QMainWindow, UiDirectorHiringWindow):
             parent: Родительский виджет.
         """
         super().__init__(parent)
+        self.setWindowTitle("Наём сотрудников")
         self.setupUi(self)
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 

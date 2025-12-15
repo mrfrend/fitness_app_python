@@ -64,6 +64,7 @@ class DirectorEquipmentWindow(QMainWindow, UiDirectorEquipmentWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Закупка тренажеров")
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self._equipment_table = QTableWidget(parent=self.centralwidget)

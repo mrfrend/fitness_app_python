@@ -24,6 +24,7 @@ class DirectorStatisticsWindow(QMainWindow, UiDirectorStatisticsWindow):
         """
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle("Статистика клуба")
         self.setStyleSheet(DIRECTOR_UI_STYLESHEET)
 
         self.pushButton_back.clicked.connect(self._go_back)
