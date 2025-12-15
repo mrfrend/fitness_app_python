@@ -67,11 +67,27 @@ class DirectorPricePolicyWindow(QMainWindow, UiDirectorPricePolicyWindow):
         self.verticalLayout.insertWidget(0, self._memberships_table)
         self.verticalScrollBar.hide()
 
+        self._memberships_table.itemSelectionChanged.connect(self._apply_selected_membership)
+
         self.pushButton_update_data.clicked.connect(self._reload_memberships)
         self.pushButton_save_data.clicked.connect(self._save_price)
         self.pushButton_back.clicked.connect(self._go_back)
 
         self._reload_memberships()
+
+    def _apply_selected_membership(self) -> None:
+        row = self._memberships_table.currentRow()
+        if row < 0:
+            return
+
+        membership_id_item = self._memberships_table.item(row, 0)
+        price_item = self._memberships_table.item(row, 2)
+
+        membership_id_text = membership_id_item.text().strip() if membership_id_item is not None else ""
+        price_text = price_item.text().strip() if price_item is not None else ""
+
+        self.lineEdit_id.setText(membership_id_text)
+        self.lineEdit_new_price.setText(price_text)
 
     def _go_back(self) -> None:
         """Возвращает пользователя в предыдущее окно."""
