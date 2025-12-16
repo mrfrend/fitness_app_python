@@ -5,6 +5,7 @@ from app.client.dao.client_dao import ClientDAO
 from app.client.windows.client_window import ClientWindow
 from app.director.windows.director_main import DirectorMainWindow
 from app.admin.windows.admin_main_window import AdminPanelWindow
+from app.trainer.windows.main_trainer_window import MainTrainerWindow
 
 class AuthWindow(AuthUi):
     def __init__(self):
@@ -116,6 +117,10 @@ class AuthWindow(AuthUi):
                 case 'Administrator':
                     self.admin_window = AdminPanelWindow()
                     self.admin_window.show()
+                    self.hide()
+                case 'Trainer':
+                    self.trainer_window = MainTrainerWindow(user['userID'])
+                    self.trainer_window.show()
                     self.hide()
             QMessageBox.information(self, "Информация",
                                         f"Добро пожаловать, {user['first_name']}!\n"
