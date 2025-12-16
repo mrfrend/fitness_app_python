@@ -1,9 +1,10 @@
 from PyQt6 import uic
 from PyQt6.QtCore import QDate
-from PyQt6.QtWidgets import QMessageBox, QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QMessageBox, QTableWidget, QTableWidgetItem, QWidget
 
 from app.core.navigable_window import NavigableWindow
 from app.core.qt import ui_path
+from app.core.ui_styles import TRAINER_UI_STYLESHEET
 from app.trainer.dao import trainer_dao
 from app.trainer.windows.trainer_class_info_dialog import TrainerClassInfoDialog
 
@@ -12,6 +13,10 @@ class TrainerScheduleWindow(NavigableWindow):
     def __init__(self, trainer_id: int, parent=None):
         super().__init__(parent_window=parent)
         uic.loadUi(ui_path("trainer", "interfaces", "trainer_schedule.ui"), self)
+        self.setStyleSheet(TRAINER_UI_STYLESHEET)
+        for child in self.findChildren(QWidget):
+            if child is not self and child.styleSheet():
+                child.setStyleSheet("")
         self._trainer_id = trainer_id
         self._dao = trainer_dao
 
@@ -20,6 +25,9 @@ class TrainerScheduleWindow(NavigableWindow):
         self._table.setHorizontalHeaderLabels(
             ["Тип", "ID", "Название/Цель", "Дата", "Начало", "Конец", "Статус"]
         )
+        self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._table.setAlternatingRowColors(True)
         self.verticalLayout.addWidget(self._table)
 
         self.comboBox_type.currentIndexChanged.connect(self._reload)

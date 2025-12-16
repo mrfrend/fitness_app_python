@@ -1,9 +1,10 @@
 from datetime import date
 
 from PyQt6 import uic
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog, QWidget
 
 from app.core.qt import ui_path
+from app.core.ui_styles import TRAINER_UI_STYLESHEET
 from app.trainer.dao import trainer_dao
 
 
@@ -11,6 +12,10 @@ class TrainerMeasureDialog(QDialog):
     def __init__(self, client_id: int, parent=None):
         super().__init__(parent)
         uic.loadUi(ui_path("trainer", "interfaces", "trainer_measure.ui"), self)
+        self.setStyleSheet(TRAINER_UI_STYLESHEET)
+        for child in self.findChildren(QWidget):
+            if child is not self and child.styleSheet():
+                child.setStyleSheet("")
         self._client_id = client_id
         self._dao = trainer_dao
 

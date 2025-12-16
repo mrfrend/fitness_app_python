@@ -1,8 +1,9 @@
 from PyQt6 import uic
-from PyQt6.QtWidgets import QMainWindow, QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QMainWindow, QTableWidget, QTableWidgetItem, QWidget
 
 from app.core.navigable_window import NavigableWindow
 from app.core.qt import ui_path
+from app.core.ui_styles import TRAINER_UI_STYLESHEET
 from app.trainer.dao import trainer_dao
 from app.trainer.windows.trainer_measure_dialog import TrainerMeasureDialog
 from app.trainer.windows.trainer_rec_dialog import TrainerRecommendationDialog
@@ -12,12 +13,19 @@ class TrainerClientsWindow(NavigableWindow):
     def __init__(self, trainer_id: int, parent=None):
         super().__init__(parent_window=parent)
         uic.loadUi(ui_path("trainer", "interfaces", "trainer_clients.ui"), self)
+        self.setStyleSheet(TRAINER_UI_STYLESHEET)
+        for child in self.findChildren(QWidget):
+            if child is not self and child.styleSheet():
+                child.setStyleSheet("")
         self._trainer_id = trainer_id
         self._dao = trainer_dao
 
         self._table = QTableWidget(self)
         self._table.setColumnCount(4)
         self._table.setHorizontalHeaderLabels(["ID", "ФИО", "Телефон", "Ограничения"])
+        self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._table.setAlternatingRowColors(True)
         self.verticalLayout.addWidget(self._table)
 
         self.pushButton_back.clicked.connect(self._back)

@@ -1,7 +1,8 @@
 from PyQt6 import uic
-from PyQt6.QtWidgets import QDialog, QTableWidget, QTableWidgetItem
+from PyQt6.QtWidgets import QDialog, QTableWidget, QTableWidgetItem, QWidget
 
 from app.core.qt import ui_path
+from app.core.ui_styles import TRAINER_UI_STYLESHEET
 from app.trainer.dao import trainer_dao
 
 
@@ -9,12 +10,19 @@ class TrainerClassInfoDialog(QDialog):
     def __init__(self, class_id: int, parent=None):
         super().__init__(parent)
         uic.loadUi(ui_path("trainer", "interfaces", "trainer_class_info.ui"), self)
+        self.setStyleSheet(TRAINER_UI_STYLESHEET)
+        for child in self.findChildren(QWidget):
+            if child is not self and child.styleSheet():
+                child.setStyleSheet("")
         self._class_id = class_id
         self._dao = trainer_dao
 
         self._table = QTableWidget(self)
         self._table.setColumnCount(2)
         self._table.setHorizontalHeaderLabels(["Клиент", "Статус"])
+        self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._table.setAlternatingRowColors(True)
         self.verticalLayout.addWidget(self._table)
 
         self.pushButton_back.clicked.connect(self.reject)

@@ -1,6 +1,7 @@
 from PyQt6 import uic
-from PyQt6.QtWidgets import QMainWindow, QMessageBox
+from PyQt6.QtWidgets import QMainWindow, QMessageBox, QWidget
 
+from app.core.ui_styles import TRAINER_UI_STYLESHEET
 from app.core.qt import ui_path
 from app.trainer.windows.trainer_clients_window import TrainerClientsWindow
 from app.trainer.windows.trainer_req_window import TrainerEquipmentRequestWindow
@@ -11,6 +12,10 @@ class MainTrainerWindow(QMainWindow):
     def __init__(self, trainer_id: int):
         super().__init__()
         uic.loadUi(ui_path("trainer", "interfaces", "main_trainer.ui"), self)
+        self.setStyleSheet(TRAINER_UI_STYLESHEET)
+        for child in self.findChildren(QWidget):
+            if child is not self and child.styleSheet():
+                child.setStyleSheet("")
         self._trainer_id = trainer_id
 
         self.pushButton_schedule.clicked.connect(self._open_schedule)
